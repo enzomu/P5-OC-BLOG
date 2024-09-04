@@ -1,0 +1,22 @@
+{
+    "name": "enzo/p5-oc-blog",
+    "description": "my professional blog",
+    "autoload": {
+        "psr-4": {
+            "Enzo\\P5OcBlog\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "enzomu",
+            "email": "enzomularczyk@hotmail.fr"
+        }
+    ],
+    "require": {
+        "symfony/http-foundation": "^7.1",
+        "symfony/routing": "^7.1",
+        "symfony/twig-bundle": "^7.1",
+        "symfony/security": "^2.0",
+        "doctrine/orm": "^3.2"
+    }
+}
