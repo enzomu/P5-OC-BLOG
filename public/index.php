@@ -11,6 +11,4 @@ $request = Request::createFromGlobals();
 
 $response = new Response('Hello, World!', Response::HTTP_OK);
 
-$response = new Response('Page not found', Response::HTTP_NOT_FOUND);
-
 $response->send();
