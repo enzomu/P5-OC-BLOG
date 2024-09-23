@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Blog{% endblock %}</title>
+
+    <link rel="stylesheet" href="/public/css/styles.css">
+</head>
+<body>
+
+{% include 'partials/header.html.twig' %}
+
+<main role="main" class="container mt-4">
+    {% block body %}
+    {% endblock %}
+</main>
+{% include 'partials/footer.html.twig' %}
+
+</body>
+</html>
