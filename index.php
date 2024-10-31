@@ -1,9 +1,15 @@
 <?php
 
 use Enzo\P5OcBlog\Controllers\UserController;
+use Enzo\P5OcBlog\Controllers\PostController;
+use Enzo\P5OcBlog\Controllers\CommentController;
 use Enzo\P5OcBlog\Repository\UserRepository;
+use Enzo\P5OcBlog\Repository\PostRepository;
+use Enzo\P5OcBlog\Repository\CommentRepository;
 use Enzo\P5OcBlog\Services\DbManager;
 use Enzo\P5OcBlog\Services\UserService;
+use Enzo\P5OcBlog\Services\PostService;
+use Enzo\P5OcBlog\Services\CommentService;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 
@@ -27,9 +33,18 @@ $userRepository = new UserRepository($pdo);
 $userService = new UserService($userRepository);
 $userController = new UserController($userService, $twig);
 
+$postRepository = new PostRepository($pdo);
+$commentRepository = new CommentRepository($pdo);
+
+$postService = new PostService($postRepository);
+$commentService = new CommentService($commentRepository);
+
+$postController = new PostController($postService, $commentService, $twig, $userController);
+$commentController = new CommentController($commentService, $twig);
+
 $page = $_GET['page'] ?? 'home';
 
-$validPages = ['home', 'post', 'blog_list', 'edit_post', 'login', 'register', 'login_user', 'register_user', 'logout'];
+$validPages = ['home', 'post', 'blog_list', 'edit_post', 'login', 'register', 'login_user', 'register_user', 'logout', 'create_post', 'update_post', 'delete_post', 'create_comment', 'update_comment', 'delete_comment'];
 if (!in_array($page, $validPages)) {
     $page = '404.html.twig';
 }
@@ -66,14 +81,65 @@ switch ($page) {
         break;
 
     case 'blog_list':
+        $postController->list();
         break;
+
+/*    case 'post':
+        $postId = $_GET['id'] ?? null;
+        if ($postId) {
+            $post = $postService->findPostById($postId);
+            $comments = $commentService->getCommentsByPostId($postId);
+            $params['post'] = $post;
+            $params['comments'] = $comments;
+            echo $twig->render('post.html.twig', $params);
+        }
+        break;*/
 
     case 'post':
-        echo $twig->render('post.html.twig', $params);
+        $postId = $_GET['id'] ?? null;
+        if ($postId) {
+            // Appel de la méthode show dans le PostController
+            $postController->show((int)$postId);
+        } else {
+            // Gérer le cas où l'ID n'est pas fourni
+            echo $twig->render('404.html.twig'); // Afficher une page 404 si l'ID est manquant
+        }
         break;
 
-    case 'edit_post':
-        echo $twig->render('edit_post.html.twig', $params);
+    case 'create_post':
+        $postController->create();
+        break;
+
+    case 'update_post':
+        $postController->update();
+        break;
+
+    case 'delete_post':
+        $postId = $_GET['id'] ?? null;
+        if ($postId) {
+            $postController->delete($postId);
+        }
+        break;
+
+    case 'create_comment':
+        $postId = $_GET['post_id'] ?? null;
+        if ($postId) {
+            $commentController->create($postId);
+        }
+        break;
+
+    case 'update_comment':
+        $commentId = $_GET['id'] ?? null;
+        if ($commentId) {
+            $commentController->update($commentId);
+        }
+        break;
+
+    case 'delete_comment':
+        $commentId = $_GET['id'] ?? null;
+        if ($commentId) {
+            $commentController->delete($commentId);
+        }
         break;
 
     default:

@@ -2,28 +2,100 @@
 
 namespace Enzo\P5OcBlog\Repository;
 
-use Enzo\P5OcBlog\Services\DbManager;
+use Enzo\P5OcBlog\Entity\Post;
 use PDO;
 
 class PostRepository
 {
-    private $pdo;
+    private PDO $db;
 
-    public function __construct(DbManager $dbManager)
+    public function __construct(PDO $db)
     {
-        $this->pdo = $dbManager->getPdo();
+        $this->db = $db;
     }
-    public function createPost($title, $content, $category, $imageUrl, $imageCaption, $authorId)
+
+    public function save(Post $post): bool
     {
-        $sql = 'INSERT INTO posts (title, content, category, image_url, image_caption, author_id, created_at) 
-                VALUES (:title, :content, :category, :image_url, :image_caption, :author_id, NOW())';
-        $query = $this->pdo->prepare($sql);
-        $query->bindParam(':title', $title);
-        $query->bindParam(':content', $content);
-        $query->bindParam(':category', $category);
-        $query->bindParam(':image_url', $imageUrl);
-        $query->bindParam(':image_caption', $imageCaption);
-        $query->bindParam(':author_id', $authorId);
-        $query->execute();
+        if ($post->getId() === null) {
+            $sql = 'INSERT INTO posts (title, content, image, caption, extra_content, created_at, user_id) 
+                    VALUES (:title, :content, :image, :caption, :extra_content, NOW(), :user_id)';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':title', $post->getTitle());
+            $stmt->bindValue(':content', $post->getContent());
+            $stmt->bindValue(':image', $post->getImage());
+            $stmt->bindValue(':caption', $post->getcaption());
+            $stmt->bindValue(':extra_content', $post->getExtraContent());
+            $stmt->bindValue(':user_id', $post->getUserId());
+        } else {
+            $sql = 'UPDATE posts SET title = :title, content = :content, image = :image, caption = :caption, extra_content = :extra_content, updated_at = NOW() 
+                    WHERE id = :id';
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':title', $post->getTitle());
+            $stmt->bindValue(':content', $post->getContent());
+            $stmt->bindValue(':image', $post->getImage());
+            $stmt->bindValue(':caption', $post->getcaption());
+            $stmt->bindValue(':extra_content', $post->getExtraContent());
+            $stmt->bindValue(':id', $post->getId());
+        }
+        return $stmt->execute();
+    }
+
+    public function findById(int $id): ?Post
+    {
+        $stmt = $this->db->prepare('SELECT * FROM posts WHERE id = :id');
+        $stmt->bindValue(':id', $id);
+        $stmt->execute();
+        $row = $stmt->fetch();
+
+        if ($row) {
+            return $this->hydratePost($row);
+        }
+
+        return null;
+    }
+
+    public function findAll(): array
+    {
+        $stmt = $this->db->query('SELECT * FROM posts ORDER BY created_at DESC');
+        $posts = [];
+        while ($row = $stmt->fetch()) {
+            $posts[] = $this->hydratePost($row);
+        }
+        return $posts;
+    }
+
+    public function findByAuthorId(int $authorId): array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM posts WHERE user_id = :user_id ORDER BY created_at DESC');
+        $stmt->bindValue(':user_id', $authorId);
+        $stmt->execute();
+        $posts = [];
+        while ($row = $stmt->fetch()) {
+            $posts[] = $this->hydratePost($row);
+        }
+        return $posts;
+    }
+
+    private function hydratePost(array $row): Post
+    {
+        return new Post(
+            $row['id'],
+            $row['title'],
+            $row['content'],
+            $row['image'],
+            $row['caption'],
+            $row['extra_content'],
+            $row['user_id'],
+            new \DateTime($row['created_at']),
+            new \DateTime($row['updated_at'])
+        );
+    }
+
+
+    public function delete(int $id): bool
+    {
+        $stmt = $this->db->prepare('DELETE FROM posts WHERE id = :id');
+        $stmt->bindValue(':id', $id);
+        return $stmt->execute();
     }
 }

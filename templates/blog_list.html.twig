@@ -3,7 +3,6 @@
 {% block title %}Articles{% endblock %}
 
 {% block body %}
-
     <section class="page-section">
         <div class="container px-4 px-lg-5">
             <div class="row gx-4 gx-lg-5 justify-content-center">
@@ -12,9 +11,9 @@
                         <ul class="list-group">
                             {% for post in posts %}
                                 <li class="list-group-item">
-                                    <h3><a href="/index.php?page=post_id={{ post.id }}">{{ post.title }}</a></h3>
+                                    <h3><a href="/index.php?page=post&id={{ post.id }}">{{ post.title }}</a></h3>
                                     <p>{{ post.summary }}</p>
-                                    <p><a href="/index.php?page=post_id={{ post.id }}">Read more</a></p>
+                                    <p><a href="/index.php?page=post&id={{ post.id }}">Read more</a></p>
                                 </li>
                             {% endfor %}
                         </ul>
