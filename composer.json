@@ -17,6 +17,7 @@
         "symfony/routing": "^7.1",
         "symfony/twig-bundle": "^7.1",
         "symfony/security": "^2.0",
-        "doctrine/orm": "^3.2"
+        "doctrine/orm": "^3.2",
+        "vlucas/phpdotenv": "^5.6"
     }
 }
