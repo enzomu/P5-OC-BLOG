@@ -2,6 +2,7 @@
 
 namespace Enzo\P5OcBlog\Controllers;
 
+use Enzo\P5OcBlog\Repository\UserRepository;
 use Enzo\P5OcBlog\Services\UserService;
 use Twig\Environment;
 
@@ -80,15 +81,27 @@ class UserController
         exit();
     }
 
+    public function isUserLoggedIn(): bool
+    {
+        return !empty($_SESSION['user_id']);
+    }
+
     public function getUserInfo(): array
     {
         if (isset($_SESSION['user_id'])) {
             $user = $this->userService->getUserById($_SESSION['user_id']);
             return [
                 'isLoggedIn' => true,
-                'username' => $user->getUsername()
+                'username' => $user->getUsername(),
+                'role' => $user->getRole()
             ];
         }
-        return ['isLoggedIn' => false, 'username' => null];
+        return ['isLoggedIn' => false, 'username' => null, 'role' => null,];
+    }
+
+    public function getUserRoles(int $userId): array
+    {
+        $userRepository = new UserRepository();
+        return $userRepository->getUserRoles($userId);
     }
 }

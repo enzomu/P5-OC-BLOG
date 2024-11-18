@@ -65,4 +65,13 @@ class UserRepository extends DbManager
 
         return $stmt->execute();
     }
+
+    public function getUserRoles(int $userId): array
+    {
+        $pdo = $this->getPdo();
+        $stmt = $pdo->prepare('SELECT role FROM users WHERE id = :user_id');
+        $stmt->execute(['user_id' => $userId]);
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
 }
