@@ -3,7 +3,7 @@
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block body %}
-    <article class="mb-4">
+    <article class="mb-5">
         <div class="container px-4 px-lg-5">
             <div class="row gx-4 gx-lg-5 justify-content-center">
                 <div class="col-md-10 col-lg-8 col-xl-7">
@@ -11,9 +11,11 @@
                     <p>{{ post.content }}</p>
 
                     {% if post.image %}
-                        <a href="{{ post.image }}">
-                            <img class="img-fluid" src="{{ post.image }}" alt="{{ post.caption }}" />
-                        </a>
+                        <div class="post-image">
+                            <a href="{{ post.image }}">
+                                <img class="img-fluid" src="{{ post.image }}" alt="{{ post.caption }}" />
+                            </a>
+                        </div>
                     {% endif %}
 
                     {% if post.caption %}
@@ -30,11 +32,14 @@
         </div>
     </article>
 
-    <section class="mb-5">
+    <hr class="my-5">
+
+    <section class="comments-section">
         <div class="container px-4 px-lg-5">
             <div class="row gx-4 gx-lg-5 justify-content-center">
                 <div class="col-md-10 col-lg-8 col-xl-7">
-                    <h2 class="section-heading">Leave a Comment</h2>
+                    <!-- Leave a Comment -->
+                    <h3 class="section-heading">Leave a Comment</h3>
                     <form id="commentForm" method="POST" action="/index.php?page=create_comment&post_id={{ post.id }}">
                         <div class="form-group mt-3">
                             <label for="content">Your Comment</label>
@@ -45,11 +50,35 @@
 
                     <div class="comments mt-5">
                         <h3>Comments</h3>
+
                         {% for comment in comments %}
-                            <div class="comment mt-4">
-                                <h4>{{ comment.username }}</h4>
-                                <span>{{ comment.date|date('F j, Y') }}</span>
-                                <p>{{ comment.content }}</p>
+                            <div class="comment mt-4 p-3 border rounded">
+                                <div class="row">
+                                    <div class="col-md-10">
+                                        <h4>{{ comment.username }}</h4>
+                                        <span class="text-muted">{{ comment.date|date('F j, Y') }}</span>
+                                        <p>{{ comment.content }}</p>
+                                    </div>
+
+                                    {% if isAdmin %}
+                                        <div class="col-md-2 d-flex flex-column align-items-end">
+                                            <!-- Validation Button -->
+                                            {% if comment.validated == 0 %}
+                                                <form method="post" action="/index.php?page=post&id={{ post.id }}&action=validate_comment&comment_id={{ comment.id }}">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm mb-2 w-auto">Validate</button>
+                                                </form>
+                                            {% else %}
+                                                <!-- Validated Button (non clickable) -->
+                                                <button class="btn btn-primary btn-sm mb-2 w-auto" disabled>Validated</button>
+                                            {% endif %}
+
+                                            <!-- Delete Button -->
+                                            <form method="post" action="/index.php?page=post&id={{ post.id }}&action=delete_comment&comment_id={{ comment.id }}">
+                                                <button type="submit" class="btn btn-danger btn-sm w-auto">Delete</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
                         {% else %}
                             <p>No comments yet.</p>

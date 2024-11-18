@@ -6,6 +6,7 @@ use Enzo\P5OcBlog\Controllers\CommentController;
 use Enzo\P5OcBlog\Repository\UserRepository;
 use Enzo\P5OcBlog\Repository\PostRepository;
 use Enzo\P5OcBlog\Repository\CommentRepository;
+use Enzo\P5OcBlog\Services\AuthenticationService;
 use Enzo\P5OcBlog\Services\DbManager;
 use Enzo\P5OcBlog\Services\UserService;
 use Enzo\P5OcBlog\Services\PostService;
@@ -29,18 +30,22 @@ $twig = new Environment($loader, [
 $dbManager = new DbManager();
 $pdo = $dbManager->getPdo();
 
+$commentRepository = new CommentRepository($pdo);
+$postRepository = new PostRepository($pdo);
 $userRepository = new UserRepository($pdo);
+
 $userService = new UserService($userRepository);
+$commentService = new CommentService($commentRepository);
+$postService = new PostService($postRepository);
+
 $userController = new UserController($userService, $twig);
 
-$postRepository = new PostRepository($pdo);
-$commentRepository = new CommentRepository($pdo);
+$authentificationService = new AuthenticationService($userController);
 
-$postService = new PostService($postRepository);
-$commentService = new CommentService($commentRepository);
 
-$postController = new PostController($postService, $commentService, $twig, $userController);
-$commentController = new CommentController($commentService, $twig);
+
+$postController = new PostController($postService, $commentService, $twig, $userController, $authentificationService);
+$commentController = new CommentController($commentService, $twig, $authentificationService);
 
 $page = $_GET['page'] ?? 'home';
 
@@ -98,11 +103,9 @@ switch ($page) {
     case 'post':
         $postId = $_GET['id'] ?? null;
         if ($postId) {
-            // Appel de la méthode show dans le PostController
             $postController->show((int)$postId);
         } else {
-            // Gérer le cas où l'ID n'est pas fourni
-            echo $twig->render('404.html.twig'); // Afficher une page 404 si l'ID est manquant
+            echo $twig->render('404.html.twig');
         }
         break;
 
