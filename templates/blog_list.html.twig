@@ -16,12 +16,19 @@
                                             <a href="/index.php?page=post&id={{ postData.post.id }}">{{ postData.post.title }}</a>
                                         </h3>
 
+                                        {% if postData.post.chapo %}
+                                            <div class="chapo mt-4">
+                                                <p>{{ postData.post.chapo }}</p>
+                                            </div>
+                                        {% endif %}
+
                                         {% if postData.post.image %}
                                             <div class="image-container mb-3">
                                                 <a href="/index.php?page=post&id={{ postData.post.id }}">
                                                     <img class="img-fluid" src="{{ postData.post.image }}" alt="{{ postData.post.caption }}" style="max-height: 300px; object-fit: cover;">
                                                 </a>
                                             </div>
+                                            <span class="caption text-muted">{{ post.updatedAt|date('Y-m-d') }}</span>
                                         {% endif %}
 
                                         <p>{{ postData.post.summary }}</p>

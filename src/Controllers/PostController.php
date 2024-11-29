@@ -5,6 +5,7 @@ namespace Enzo\P5OcBlog\Controllers;
 use Enzo\P5OcBlog\Services\AuthenticationService;
 use Enzo\P5OcBlog\Services\CommentService;
 use Enzo\P5OcBlog\Services\PostService;
+use Enzo\P5OcBlog\Services\UserService;
 use Twig\Environment;
 
 class PostController
@@ -15,18 +16,21 @@ class PostController
     private CommentService $commentService;
 
     private AuthenticationService $authenticationService;
+    private UserService $userService;
 
     public function __construct(
         PostService $postService,
         CommentService $commentService,
         Environment $twig,
         UserController $userController,
+        UserService $userService,
         AuthenticationService $authenticationService
     )
     {
         $this->postService = $postService;
         $this->commentService = $commentService;
         $this->userController = $userController;
+        $this->userService = $userService;
         $this->twig = $twig;
         $this->authenticationService = $authenticationService;
     }
@@ -48,10 +52,10 @@ class PostController
             $content = $_POST['content'] ?? '';
             $image = $_POST['image'] ?? '';
             $caption = $_POST['caption'] ?? '';
-            $extraContent = $_POST['extra_content'] ?? '';
+            $chapo = $_POST['chapo'] ?? '';
             $userId = $_SESSION['user_id'];
 
-            $result = $this->postService->createPost($title, $content, $image, $caption, $extraContent, $userId);
+            $result = $this->postService->createPost($title, $content, $image, $caption, $chapo, $userId);
 
             if ($result['success']) {
                 header('Location: /index.php?page=blog_list');
@@ -78,9 +82,9 @@ class PostController
             $content = $_POST['content'] ?? '';
             $image = $_POST['image'] ?? '';
             $caption = $_POST['caption'] ?? '';
-            $extraContent = $_POST['extra_content'] ?? '';
+            $chapo = $_POST['chapo'] ?? '';
 
-            $result = $this->postService->updatePost($postId, $title, $content, $image, $caption, $extraContent);
+            $result = $this->postService->updatePost($postId, $title, $content, $image, $caption, $chapo);
 
             if ($result['success']) {
                 header('Location: /index.php?page=blog_list');
@@ -90,6 +94,19 @@ class PostController
                 echo $this->twig->render('edit_post.html.twig', $params);
             }
         }
+    }
+
+    public function showEditForm(int $postId): void
+    {
+        $post = $this->postService->findPostById($postId);
+
+        if ($post === null) {
+            echo $this->twig->render('404.html.twig');
+            return;
+        }
+
+        $params = $this->getGlobalParams(['post' => $post]);
+        echo $this->twig->render('edit_post.html.twig', $params);
     }
 
     public function delete(int $postId): void
@@ -103,15 +120,6 @@ class PostController
         exit;
     }
 
-/*    public function show(int $postId): void
-    {
-        $post = $this->postService->findPostById($postId);
-        $comments = $this->commentService->getCommentsWithUsernamesByPostId($postId);
-        dd($comments);
-        $params = $this->getGlobalParams(['post' => $post, 'comments' => $comments]);
-        echo $this->twig->render('post.html.twig', $params);
-    }*/
-
     public function show(int $postId): void
     {
         $post = $this->postService->findPostById($postId);
@@ -121,6 +129,8 @@ class PostController
             return;
         }
 
+        $postAuthor = $this->userService->getUserById($post->getUserId());
+
         $userRole = $this->authenticationService->getRoles();
         $userRole = is_array($userRole) ? $userRole : [];
 
@@ -128,31 +138,37 @@ class PostController
 
         $comments = $this->commentService->getCommentsWithUsernamesByPostId($postId, $onlyValidated);
 
-        if (isset($_GET['action']) && isset($_GET['comment_id'])) {
-            $commentId = (int) $_GET['comment_id'];
+        if (isset($_GET['action'])) {
             $action = $_GET['action'];
 
-            if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
-                if ($action === 'validate_comment') {
-                    $this->commentService->validateComment($commentId);
-                } elseif ($action === 'delete_comment') {
-                    $this->commentService->deleteComment($commentId);
+            if ($action === 'delete_post') {
+                if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
+                    $this->postService->deletePost($postId);
+                    header("Location: /index.php?page=blog_list");
+                    exit;
                 }
-                header("Location: /index.php?page=post&id={$postId}");
-                exit;
             }
+
+            if (isset($_GET['comment_id'])) {
+                $commentId = (int) $_GET['comment_id'];
+
+                if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
+                    if ($action === 'validate_comment') {
+                        $this->commentService->validateComment($commentId);
+                    } elseif ($action === 'delete_comment') {
+                        $this->commentService->deleteComment($commentId);
+                    }
+                }
+            }
+
+            header("Location: /index.php?page=post&id={$postId}");
+            exit;
         }
 
-        $params = $this->getGlobalParams(['post' => $post, 'comments' => $comments, 'isAdmin' => in_array('admin', $userRole) || in_array('super_admin', $userRole)]);
+        $params = $this->getGlobalParams(['post' => $post, 'postAuthor' => $postAuthor, 'comments' => $comments, 'isAdmin' => in_array('admin', $userRole) || in_array('super_admin', $userRole)]);
         echo $this->twig->render('post.html.twig', $params);
     }
 
-/*    public function list(): void
-    {
-        $posts = $this->postService->findAllPosts();
-        $params = $this->getGlobalParams(['posts' => $posts]);
-        echo $this->twig->render('blog_list.html.twig', $params);
-    }*/
     public function list(): void
     {
         $isAdmin = $this->authenticationService->authorize(['admin', 'super_admin']);
