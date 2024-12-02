@@ -14,9 +14,9 @@ class CommentService
         $this->commentRepository = $commentRepository;
     }
 
-    public function createComment(string $content, int $userId, int $postId): array
+    public function createComment(string $content, int $userId, int $postId, bool $validated): array
     {
-        $comment = new Comment(null, $content, new \DateTime(), $userId, $postId);
+        $comment = new Comment(null, $content, new \DateTime(), $userId, $postId, $validated);
 
         if ($this->commentRepository->save($comment)) {
             return ['success' => true, 'message' => 'Commentaire ajouté avec succès'];
@@ -41,29 +41,33 @@ class CommentService
         return ['success' => false, 'message' => 'Commentaire non trouvé'];
     }
 
-
-    public function deleteComment(int $id): array
+    public function validateComment(int $commentId): bool
     {
-        if ($this->commentRepository->delete($id)) {
-            return ['success' => true, 'message' => 'Commentaire supprimé avec succès'];
-        }
-
-        return ['success' => false, 'message' => 'Erreur lors de la suppression du commentaire'];
+        return $this->commentRepository->validate($commentId);
     }
 
+    public function deleteComment(int $commentId): bool
+    {
+        return $this->commentRepository->delete($commentId);
+    }
 
     public function getCommentsByPostId(int $postId): array
     {
         return $this->commentRepository->findByPostId($postId);
     }
 
-    public function getCommentsWithUsernamesByPostId(int $postId): array
+    public function getCommentsWithUsernamesByPostId(int $postId, $onlyValidated): array
     {
-        return $this->commentRepository->findCommentsWithUsernamesByPostId($postId);
+        return $this->commentRepository->findCommentsWithUsernamesByPostId($postId, $onlyValidated);
     }
 
     public function getCommentById(int $id): ?Comment
     {
         return $this->commentRepository->findById($id);
+    }
+
+    public function hasUnvalidatedComments(int $postId): bool
+    {
+        return $this->commentRepository->hasUnvalidatedComments($postId);
     }
 }

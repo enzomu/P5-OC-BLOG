@@ -15,7 +15,7 @@ class PostService
     }
 
 
-    public function createPost($title, $content, $image, $caption, $extraContent, $userId): array
+    public function createPost($title, $content, $image, $caption, $chapo, $userId): array
     {
 
         $post = new Post(
@@ -24,7 +24,7 @@ class PostService
             $content,
             $image,
             $caption,
-            $extraContent,
+            $chapo,
             $userId,
             new \DateTime()
         );
@@ -36,7 +36,7 @@ class PostService
     }
 
 
-    public function updatePost($id, $title, $content, $image, $imageCaption, $extraContent): array
+    public function updatePost($id, $title, $content, $image, $imageCaption, $chapo): array
     {
         $post = $this->postRepository->findById($id);
         if (!$post) {
@@ -48,7 +48,7 @@ class PostService
         $post->setContent($content);
         $post->setImage($image);
         $post->setCaption($imageCaption);
-        $post->setExtraContent($extraContent);
+        $post->setChapo($chapo);
         $post->setUpdatedAt(new \DateTime());
 
         if ($this->postRepository->save($post)) {

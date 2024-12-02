@@ -17,24 +17,24 @@ class PostRepository
     public function save(Post $post): bool
     {
         if ($post->getId() === null) {
-            $sql = 'INSERT INTO posts (title, content, image, caption, extra_content, created_at, user_id) 
-                    VALUES (:title, :content, :image, :caption, :extra_content, NOW(), :user_id)';
+            $sql = 'INSERT INTO posts (title, content, image, caption, chapo, created_at, user_id) 
+                    VALUES (:title, :content, :image, :caption, :chapo, NOW(), :user_id)';
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':title', $post->getTitle());
             $stmt->bindValue(':content', $post->getContent());
             $stmt->bindValue(':image', $post->getImage());
             $stmt->bindValue(':caption', $post->getcaption());
-            $stmt->bindValue(':extra_content', $post->getExtraContent());
+            $stmt->bindValue(':chapo', $post->getChapo());
             $stmt->bindValue(':user_id', $post->getUserId());
         } else {
-            $sql = 'UPDATE posts SET title = :title, content = :content, image = :image, caption = :caption, extra_content = :extra_content, updated_at = NOW() 
+            $sql = 'UPDATE posts SET title = :title, content = :content, image = :image, caption = :caption, chapo = :chapo, updated_at = NOW() 
                     WHERE id = :id';
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':title', $post->getTitle());
             $stmt->bindValue(':content', $post->getContent());
             $stmt->bindValue(':image', $post->getImage());
             $stmt->bindValue(':caption', $post->getcaption());
-            $stmt->bindValue(':extra_content', $post->getExtraContent());
+            $stmt->bindValue(':chapo', $post->getChapo());
             $stmt->bindValue(':id', $post->getId());
         }
         return $stmt->execute();
@@ -84,7 +84,7 @@ class PostRepository
             $row['content'],
             $row['image'],
             $row['caption'],
-            $row['extra_content'],
+            $row['chapo'],
             $row['user_id'],
             new \DateTime($row['created_at']),
             new \DateTime($row['updated_at'])

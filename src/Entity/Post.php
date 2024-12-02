@@ -9,19 +9,19 @@ class Post
     private string $content;
     private ?string $image;
     private ?string $caption;
-    private ?string $extraContent;
+    private ?string $chapo;
     private \DateTime $createdAt;
     private ?\DateTime $updatedAt;
     private int $userId;
 
-    public function __construct(?int $id, string $title, string $content, ?string $image, ?string $caption, ?string $extraContent, int $userId, \DateTime $createdAt, ?\DateTime $updatedAt = null)
+    public function __construct(?int $id, string $title, string $content, ?string $image, ?string $caption, ?string $chapo, int $userId, \DateTime $createdAt, ?\DateTime $updatedAt = null)
     {
         $this->id = $id;
         $this->title = $title;
         $this->content = $content;
         $this->image = $image;
         $this->caption = $caption;
-        $this->extraContent = $extraContent;
+        $this->chapo = $chapo;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
         $this->userId = $userId;
@@ -72,14 +72,14 @@ class Post
         $this->caption = $caption;
     }
 
-    public function getExtraContent(): ?string
+    public function getChapo(): ?string
     {
-        return $this->extraContent;
+        return $this->chapo;
     }
 
-    public function setExtraContent(?string $extraContent): void
+    public function setChapo(?string $chapo): void
     {
-        $this->extraContent = $extraContent;
+        $this->chapo = $chapo;
     }
 
     public function getCreatedAt(): \DateTime

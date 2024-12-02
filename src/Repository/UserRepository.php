@@ -3,15 +3,20 @@
 namespace Enzo\P5OcBlog\Repository;
 
 use Enzo\P5OcBlog\Entity\User;
-use Enzo\P5OcBlog\Services\DbManager;
+
 use PDO;
 
-class UserRepository extends DbManager
+class UserRepository
 {
+    private PDO $db;
+
+    public function __construct(PDO $db)
+    {
+        $this->db = $db;
+    }
     public function findById($id): ?User
     {
-        $pdo = $this->getPdo();
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = :id");
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -25,8 +30,7 @@ class UserRepository extends DbManager
 
     public function findByEmail($email): ?User
     {
-        $pdo = $this->getPdo();
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = :email");
         $stmt->bindValue(':email', $email, PDO::PARAM_STR);
         $stmt->execute();
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -52,8 +56,7 @@ class UserRepository extends DbManager
 
     public function save(User $user): bool
     {
-        $pdo = $this->getPdo();
-        $stmt = $pdo->prepare("
+        $stmt = $this->db->prepare("
             INSERT INTO users (username, email, password, role, created_at) 
             VALUES (:username, :email, :password, :role, NOW())
         ");
@@ -64,5 +67,13 @@ class UserRepository extends DbManager
         $stmt->bindValue(':role', $user->getRole(), PDO::PARAM_STR);
 
         return $stmt->execute();
+    }
+
+    public function getUserRoles(int $userId): array
+    {
+        $stmt = $this->db->prepare('SELECT role FROM users WHERE id = :user_id');
+        $stmt->execute(['user_id' => $userId]);
+
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 }

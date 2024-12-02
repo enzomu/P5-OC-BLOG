@@ -31,7 +31,7 @@ class UserService
     {
         $user = $this->userRepository->findByEmail($email);
 
-        if ($user && /*password_verify($password, $user->getPassword()))*/$password=== $user->getPassword()) {
+        if ($user && password_verify($password, $user->getPassword())) {
             return $user;
         }
 

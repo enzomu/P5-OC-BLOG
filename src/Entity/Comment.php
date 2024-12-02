@@ -9,14 +9,16 @@ class Comment
     private \DateTime $createdAt;
     private int $userId;
     private int $postId;
+    private bool $validated;
 
-    public function __construct(?int $id, string $content, \DateTime $createdAt, int $userId, int $postId)
+    public function __construct(?int $id, string $content, \DateTime $createdAt, int $userId, int $postId, bool $validated)
     {
         $this->id = $id;
         $this->content = $content;
         $this->createdAt = $createdAt;
         $this->userId = $userId;
         $this->postId = $postId;
+        $this->validated = $validated;
     }
 
     public function getId(): ?int
@@ -42,5 +44,9 @@ class Comment
     public function getPostId(): int
     {
         return $this->postId;
+    }
+    public function getValidated(): int
+    {
+        return $this->validated;
     }
 }
