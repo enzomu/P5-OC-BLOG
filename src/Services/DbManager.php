@@ -16,24 +16,38 @@ class DbManager
 
     public function __construct()
     {
-        $dotenv = Dotenv::createImmutable(dirname(__DIR__, 2), '.env');
+        $envPath = realpath(__DIR__ . '/../../.env');
+        $dotenv = Dotenv::createImmutable(dirname($envPath), '.env');
         $dotenv->load();
 
-        $this->host = $_ENV['DB_HOST'];
-        $this->db = $_ENV['DB_NAME'];
-        $this->user = $_ENV['DB_USER'];
-        $this->pass = $_ENV['DB_PASS'];
+        $this->host = $this->getEnvValue('DB_HOST');
+        $this->db = $this->getEnvValue('DB_NAME');
+        $this->user = $this->getEnvValue('DB_USER');
+        $this->pass = $this->getEnvValue('DB_PASS');
 
         try {
-            $this->pdo = new PDO("mysql:host={$this->host};dbname={$this->db};charset=utf8", $this->user, $this->pass);
+            $this->pdo = new PDO(
+                "mysql:host={$this->host};dbname={$this->db};charset=utf8",
+                $this->user,
+                $this->pass
+            );
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            echo 'Connection failed';
+            error_log('Database connection failed: ' . $e->getMessage());
+            throw new PDOException('Could not connect to the database.');
         }
     }
 
     public function getPdo(): PDO
     {
         return $this->pdo;
+    }
+
+    private function getEnvValue(string $key): string
+    {
+        if (!isset($_ENV[$key])) {
+            throw new \RuntimeException("Environment variable '{$key}' is not set.");
+        }
+        return $_ENV[$key];
     }
 }

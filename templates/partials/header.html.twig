@@ -25,7 +25,9 @@
                 <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="/index.php?page=blog_list">The posts</a></li>
 
                 {% if isLoggedIn %}
+                {% if isAdmin %}
                     <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="/index.php?page=create_post">Create your post</a></li>
+                {% endif %}
                     <li class="nav-item">
                         <a class="nav-link px-lg-3 py-3 py-lg-4">{{ username }}</a>
                     </li>

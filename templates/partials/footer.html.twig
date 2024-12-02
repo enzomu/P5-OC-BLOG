@@ -11,9 +11,11 @@
                     </li>
 
                     {% if isLoggedIn %}
+                    {% if isAdmin %}
                         <li class="list-inline-item">
                             <a href="/index.php?page=create_post" class="nav-link fw-bold">Create your post</a>
                         </li>
+                    {% endif %}
                         <li class="list-inline-item">
                             <a href="/index.php?page=logout" class="nav-link fw-bold">Disconnect</a>
                         </li>

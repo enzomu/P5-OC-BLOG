@@ -2,14 +2,14 @@
 
 namespace Enzo\P5OcBlog\Entity;
 class User {
-    private int $id;
+    private ?int $id;
     private string $username;
     private string $email;
     private string $password;
     private string $role;
     private $createdAt;
 
-    public function __construct($id, $username, $email, $password, $role, $createdAt) {
+    public function __construct(?int $id, $username, $email, $password, $role, $createdAt) {
         $this->id = $id;
         $this->username = $username;
         $this->email = $email;

@@ -4,6 +4,8 @@ namespace Enzo\P5OcBlog\Controllers;
 
 use Enzo\P5OcBlog\Services\AuthenticationService;
 use Enzo\P5OcBlog\Services\CommentService;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Request;
 use Twig\Environment;
 
 class CommentController
@@ -11,75 +13,81 @@ class CommentController
     private AuthenticationService $authenticationService;
     private CommentService $commentService;
     private Environment $twig;
-   // private UserController $userController;
+    private Session $session;
 
-    public function __construct(CommentService $commentService, Environment $twig, AuthenticationService $authenticationService, /*UserController $userController*/)
-    {
+    public function __construct(
+        CommentService $commentService,
+        Environment $twig,
+        AuthenticationService $authenticationService,
+        Session $session
+    ) {
         $this->commentService = $commentService;
         $this->twig = $twig;
         $this->authenticationService = $authenticationService;
+        $this->session = $session;
     }
 
-
-    public function create(int $postId)
+    public function create(int $postId, Request $request): void
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin', 'registered_user'])) {
-            $_SESSION['error_message'] = 'Log in to comment';
+            $this->session->getFlashBag()->add('error', 'Log in to comment');
             header("Location: /index.php?page=post&id=$postId");
             exit;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $content = $_POST['content'];
-            $userId = (int) $_SESSION['user_id'];
-            $validated = $this->authenticationService->getRoles()[0] === 'registered_user' ? 0 : 1;
+        if ($request->isMethod('POST')) {
+            $content = trim($request->request->get('content', ''));
+            $userId = (int) $this->session->get('user_id');
+            $roles = $this->authenticationService->getRoles();
+            $validated = in_array('registered_user', $roles) ? 0 : 1;
+
             $result = $this->commentService->createComment($content, $userId, $postId, $validated);
 
             if ($result['success']) {
-                $_SESSION['success_message'] = $result['message'];
+                $this->session->getFlashBag()->add('success', $result['message']);
             } else {
-                $_SESSION['error_message'] = $result['message'];
+                $this->session->getFlashBag()->add('error', $result['message']);
             }
+
             header("Location: /index.php?page=post&id=$postId");
-            unset($_SESSION['success_message']);
-            unset($_SESSION['error_message']);
-            exit();
+            exit;
         }
     }
 
-
-    public function update(int $commentId)
+    public function update(int $commentId, Request $request): void
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin'])) {
             header('Location: /index.php?page=home');
             exit;
         }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $content = $_POST['content'];
 
-
+        if ($request->isMethod('POST')) {
+            $content = trim($request->request->get('content', ''));
             $result = $this->commentService->updateComment($commentId, $content);
+
             if ($result['success']) {
-                $postId = $_POST['post_id'];
+                $postId = $request->request->get('post_id');
                 header("Location: /index.php?page=post&id=$postId");
-                exit();
+                exit;
             } else {
                 echo $this->twig->render('error.html.twig', ['message' => $result['message']]);
             }
         }
     }
 
-    public function delete(int $commentId)
+    public function delete(int $commentId, Request $request): void
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin'])) {
             header('Location: /index.php?page=home');
             exit;
         }
+
         $result = $this->commentService->deleteComment($commentId);
+        $postId = $request->query->get('post_id');
+
         if ($result['success']) {
-            $postId = $_GET['post_id'];
             header("Location: /index.php?page=post&id=$postId");
-            exit();
+            exit;
         } else {
             echo $this->twig->render('error.html.twig', ['message' => $result['message']]);
         }

@@ -4,17 +4,22 @@ namespace Enzo\P5OcBlog\Controllers;
 
 use Enzo\P5OcBlog\Repository\UserRepository;
 use Enzo\P5OcBlog\Services\UserService;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Twig\Environment;
 
 class UserController
 {
     private UserService $userService;
+    private UserRepository $userRepository;
     private Environment $twig;
+    private Session $session;
 
-    public function __construct(UserService $userService, Environment $twig)
+    public function __construct(UserService $userService, UserRepository $userRepository, Environment $twig, Session $session)
     {
         $this->userService = $userService;
+        $this->userRepository = $userRepository;
         $this->twig = $twig;
+        $this->session = $session;
     }
 
     public function register(): void
@@ -61,47 +66,52 @@ class UserController
             $user = $this->userService->login($email, $password);
 
             if ($user) {
-                $_SESSION['user_id'] = $user->getId();
+                $this->session->set('user_id', $user->getId());
+                $this->session->set('username', $user->getUsername());
+                $this->session->set('roles', $this->getUserRoles($user->getId()));
                 header('Location: /index.php?page=home');
                 exit();
             } else {
                 $error = "Identifiants invalides";
             }
-            echo $this->twig->render('login.html.twig', [
-                'error' => $error
-            ]);
         }
+
+        echo $this->twig->render('login.html.twig', [
+            'error' => $error
+        ]);
     }
 
     public function logout(): void
     {
-        session_unset();
-        session_destroy();
+        $this->session->clear();
         header('Location: /index.php?page=home');
         exit();
     }
 
     public function isUserLoggedIn(): bool
     {
-        return !empty($_SESSION['user_id']);
+        return $this->session->has('user_id');
     }
 
     public function getUserInfo(): array
     {
-        if (isset($_SESSION['user_id'])) {
-            $user = $this->userService->getUserById($_SESSION['user_id']);
+        if ($this->session->has('user_id')) {
             return [
                 'isLoggedIn' => true,
-                'username' => $user->getUsername(),
-                'role' => $user->getRole()
+                'username' => $this->session->get('username'),
+                'roles' => $this->session->get('roles')
             ];
         }
-        return ['isLoggedIn' => false, 'username' => null, 'role' => null,];
+
+        return [
+            'isLoggedIn' => false,
+            'username' => null,
+            'role' => null
+        ];
     }
 
     public function getUserRoles(int $userId): array
     {
-        $userRepository = new UserRepository();
-        return $userRepository->getUserRoles($userId);
+        return $this->userRepository->getUserRoles($userId);
     }
 }
