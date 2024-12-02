@@ -41,7 +41,7 @@ $userService = new UserService($userRepository);
 $commentService = new CommentService($commentRepository);
 $postService = new PostService($postRepository);
 
-$userController = new UserController($userService, $twig);
+$userController = new UserController($userService, $twig, $userRepository);
 $authentificationService = new AuthenticationService($userController);
 
 $postController = new PostController($postService, $commentService, $twig, $userController, $userService, $authentificationService);

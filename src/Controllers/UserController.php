@@ -10,11 +10,13 @@ class UserController
 {
     private UserService $userService;
     private Environment $twig;
+    private $userRepository;
 
-    public function __construct(UserService $userService, Environment $twig)
+    public function __construct(UserService $userService, Environment $twig, UserRepository $userRepository)
     {
         $this->userService = $userService;
         $this->twig = $twig;
+        $this->userRepository = $userRepository;
     }
 
     public function register(): void
@@ -101,7 +103,6 @@ class UserController
 
     public function getUserRoles(int $userId): array
     {
-        $userRepository = new UserRepository();
-        return $userRepository->getUserRoles($userId);
+        return $this->userRepository->getUserRoles($userId);
     }
 }
