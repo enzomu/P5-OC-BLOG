@@ -66,4 +66,12 @@ $userInfo = $userController->getUserInfo();
 $params['isLoggedIn'] = $userInfo['isLoggedIn'];
 $params['username'] = $userInfo['username'];
 
-handleRouting($page, $params, $userController, $postController, $commentController, $twig);
+$response = handleRouting($page, $params, $userController, $postController, $commentController, $twig);
+
+$decodedResponse = json_decode($response, true);
+if (is_array($decodedResponse) && isset($decodedResponse['redirect'])) {
+    header('Location: ' . $decodedResponse['redirect']);
+    exit;
+}
+
+echo $response;

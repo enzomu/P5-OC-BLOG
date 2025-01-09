@@ -4,94 +4,85 @@ use Enzo\P5OcBlog\Controllers\UserController;
 use Enzo\P5OcBlog\Controllers\PostController;
 use Enzo\P5OcBlog\Controllers\CommentController;
 use Twig\Environment;
-
-function handleRouting(string $page, array $params, UserController $userController, PostController $postController, CommentController $commentController, Environment $twig): void
-{
+function handleRouting(
+    string $page,
+    array $params,
+    UserController $userController,
+    PostController $postController,
+    CommentController $commentController,
+    Environment $twig
+): string {
     switch ($page) {
         case 'home':
-            echo $twig->render('home.html.twig', $params);
-            break;
+            return $twig->render('home.html.twig', $params);
 
         case 'login_user':
-            $userController->login();
-            break;
+            return $userController->login();
 
         case 'login':
-            echo $twig->render('login.html.twig', $params);
-            break;
+            return $twig->render('login.html.twig', $params);
 
         case 'logout':
-            $userController->logout();
-            break;
+            return $userController->logout();
 
         case 'register_user':
-            $userController->register();
-            break;
+            return $userController->register();
 
         case 'register':
-            echo $twig->render('register.html.twig', $params);
-            break;
+            return $twig->render('register.html.twig', $params);
 
         case 'blog_list':
-            $postController->list();
-            break;
+            return $postController->list();
 
         case 'post':
-            $postId = $_GET['id'] ?? null;
+            $postId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
             if ($postId) {
-                $postController->show((int)$postId);
-            } else {
-                echo $twig->render('404.html.twig');
+                return $postController->show($postId);
             }
-            break;
+            return $twig->render('404.html.twig');
 
         case 'create_post':
-            $postController->create();
-            break;
+            return $postController->create();
 
         case 'update_post':
-            $postController->update();
-            break;
+            return $postController->update();
 
         case 'edit_post':
-            $postId = $_GET['id'] ?? null;
+            $postId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
             if ($postId) {
-                $postController->showEditForm((int)$postId);
-            } else {
-                echo $twig->render('404.html.twig');
+                return $postController->showEditForm($postId);
             }
-            break;
+            return $twig->render('404.html.twig');
 
         case 'delete_post':
-            $postId = $_GET['id'] ?? null;
+            $postId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
             if ($postId) {
-                $postController->delete($postId);
+                return $postController->delete($postId);
             }
-            break;
+            return $twig->render('404.html.twig');
 
         case 'create_comment':
-            $postId = $_GET['post_id'] ?? null;
+            $postId = filter_input(INPUT_GET, 'post_id', FILTER_VALIDATE_INT);
             if ($postId) {
-                $commentController->create($postId);
+                return $commentController->create($postId);
             }
-            break;
+            return $twig->render('404.html.twig');
 
         case 'update_comment':
-            $commentId = $_GET['id'] ?? null;
+            $commentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
             if ($commentId) {
-                $commentController->update($commentId);
+                return $commentController->update($commentId);
             }
-            break;
+            return $twig->render('404.html.twig');
 
         case 'delete_comment':
-            $commentId = $_GET['id'] ?? null;
+            $commentId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
             if ($commentId) {
-                $commentController->delete($commentId);
+                return $commentController->delete($commentId);
             }
-            break;
+            return $twig->render('404.html.twig');
 
         default:
-            echo $twig->render('404.html.twig');
-            break;
+            return $twig->render('404.html.twig');
     }
 }

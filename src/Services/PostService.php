@@ -66,6 +66,31 @@ class PostService
         return ['success' => false, 'message' => "Erreur lors de la suppression du post"];
     }
 
+    public function validatePostData(array $data): bool
+    {
+        if (empty($data['title']) || strlen($data['title']) > 255) {
+            return false;
+        }
+
+        if (empty($data['content'])) {
+            return false;
+        }
+
+        if (!empty($data['image']) && !filter_var($data['image'], FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        if (!empty($data['caption']) && strlen($data['caption']) > 255) {
+            return false;
+        }
+
+        if (!empty($data['chapo']) && strlen($data['chapo']) > 500) {
+            return false;
+        }
+
+        return true;
+    }
+
 
     public function findPostById(int $id): ?Post
     {

@@ -19,7 +19,7 @@ class UserController
         $this->userRepository = $userRepository;
     }
 
-    public function register(): void
+    public function register(): string
     {
         $error = null;
         $username = '';
@@ -37,24 +37,22 @@ class UserController
                 $result = $this->userService->register($username, $email, $password);
 
                 if ($result['success']) {
-                    header('Location: /index.php?page=login');
-                    exit();
+                    return $this->redirect("/index.php?page=login");
                 } else {
                     $error = $result['message'];
                 }
             }
         }
 
-        echo $this->twig->render('register.html.twig', [
+        return $this->twig->render('register.html.twig', [
             'error' => $error,
-            'username' => $username,
+            'username' => addslashes($username,),
             'email' => $email
         ]);
     }
 
-    public function login(): void
+    public function login(): string
     {
-        $error = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = $_POST['email'];
@@ -64,23 +62,22 @@ class UserController
 
             if ($user) {
                 $_SESSION['user_id'] = $user->getId();
-                header('Location: /index.php?page=home');
-                exit();
+                return $this->redirect("/index.php?page=home");
             } else {
                 $error = "Identifiants invalides";
             }
-            echo $this->twig->render('login.html.twig', [
+            return $this->twig->render('login.html.twig', [
                 'error' => $error
             ]);
         }
+        return $this->twig->render('404.html.twig');
     }
 
-    public function logout(): void
+    public function logout(): string
     {
         session_unset();
         session_destroy();
-        header('Location: /index.php?page=home');
-        exit();
+        return $this->redirect("/index.php?page=home");
     }
 
     public function isUserLoggedIn(): bool
@@ -104,5 +101,10 @@ class UserController
     public function getUserRoles(int $userId): array
     {
         return $this->userRepository->getUserRoles($userId);
+    }
+
+    private function redirect(string $url): string
+    {
+        return json_encode(['redirect' => $url]);
     }
 }
