@@ -41,135 +41,173 @@ class PostController
         return array_merge($userInfo, $additionalParams);
     }
 
-    public function create(): void
+    public function create(): string
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin'])) {
             header('Location: /index.php?page=home');
             exit;
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $title = $_POST['title'] ?? '';
-            $content = $_POST['content'] ?? '';
-            $image = $_POST['image'] ?? '';
-            $caption = $_POST['caption'] ?? '';
-            $chapo = $_POST['chapo'] ?? '';
-            $userId = $_SESSION['user_id'];
 
-            $result = $this->postService->createPost($title, $content, $image, $caption, $chapo, $userId);
+            $data = [
+                'title' => $_POST['title'] ?? '',
+                'content' => $_POST['content'] ?? '',
+                'image' => $_POST['image'] ?? '',
+                'caption' => $_POST['caption'] ?? '',
+                'chapo' => $_POST['chapo'] ?? '',
+            ];
+
+            if (!$this->postService->validatePostData($data)) {
+                header('Location: /index.php?page=create_post');
+                exit;
+            }
+
+
+            $data['userId'] = $_SESSION['user_id'];
+
+            $result = $this->postService->createPost(
+                $data['title'],
+                $data['content'],
+                $data['image'],
+                $data['caption'],
+                $data['chapo'],
+                $data['userId']
+            );
+
 
             if ($result['success']) {
-                header('Location: /index.php?page=blog_list');
-                exit;
+                return $this->redirect('/index.php?page=blog_list');
             } else {
                 $params = $this->getGlobalParams(['error' => $result['message']]);
-                echo $this->twig->render('edit_post.html.twig', $params);
+                return $this->twig->render('edit_post.html.twig', $params);
             }
         } else {
             $params = $this->getGlobalParams();
-            echo $this->twig->render('edit_post.html.twig', $params);
+            return $this->twig->render('edit_post.html.twig', $params);
         }
     }
 
-    public function update(): void
+    public function update(): string
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin'])) {
-            header('Location: /index.php?page=home');
-            exit;
+            return $this->redirect('/index.php?page=home');
         }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $postId = $_POST['id'] ?? null;
-            $title = $_POST['title'] ?? '';
-            $content = $_POST['content'] ?? '';
-            $image = $_POST['image'] ?? '';
-            $caption = $_POST['caption'] ?? '';
-            $chapo = $_POST['chapo'] ?? '';
 
-            $result = $this->postService->updatePost($postId, $title, $content, $image, $caption, $chapo);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'id' => $_POST['id'] ?? null,
+                'title' => $_POST['title'] ?? '',
+                'content' => $_POST['content'] ?? '',
+                'image' => $_POST['image'] ?? '',
+                'caption' => $_POST['caption'] ?? '',
+                'chapo' => $_POST['chapo'] ?? '',
+            ];
+
+            if (!$this->postService->validatePostData($data)) {
+                return $this->redirect('/index.php?page=edit_post&id=' . ($data['id'] ?? ''));
+            }
+
+            $result = $this->postService->updatePost(
+                $data['id'],
+                $data['title'],
+                $data['content'],
+                $data['image'],
+                $data['caption'],
+                $data['chapo']
+            );
 
             if ($result['success']) {
-                header('Location: /index.php?page=blog_list');
-                exit;
-            } else {
-                $params = $this->getGlobalParams(['error' => $result['message']]);
-                echo $this->twig->render('edit_post.html.twig', $params);
+                return $this->redirect('/index.php?page=blog_list');
             }
+
+            $params = $this->getGlobalParams(['error' => $result['message']]);
+            return $this->twig->render('edit_post.html.twig', $params);
         }
+
+        return $this->twig->render('404.html.twig');
     }
 
-    public function showEditForm(int $postId): void
+
+    public function showEditForm(int $postId): string
     {
         $post = $this->postService->findPostById($postId);
 
         if ($post === null) {
-            echo $this->twig->render('404.html.twig');
-            return;
+            return $this->twig->render('404.html.twig');
         }
 
         $params = $this->getGlobalParams(['post' => $post]);
-        echo $this->twig->render('edit_post.html.twig', $params);
+        return $this->twig->render('edit_post.html.twig', $params);
     }
 
-    public function delete(int $postId): void
+    public function delete(int $postId): string
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin'])) {
-            header('Location: /index.php?page=home');
-            exit;
+            return $this->redirect('/index.php?page=home');
         }
         $this->postService->deletePost($postId);
         header('Location: /index.php?page=blog_list');
         exit;
     }
 
-    public function show(int $postId): void
+    public function show(int $postId): string
     {
         $post = $this->postService->findPostById($postId);
 
         if ($post === null) {
-            echo $this->twig->render('404.html.twig');
-            return;
+            return $this->twig->render('404.html.twig');
         }
 
         $postAuthor = $this->userService->getUserById($post->getUserId());
-
         $userRole = $this->authenticationService->getRoles();
         $userRole = is_array($userRole) ? $userRole : [];
 
         $onlyValidated = !in_array('admin', $userRole) && !in_array('super_admin', $userRole);
-
         $comments = $this->commentService->getCommentsWithUsernamesByPostId($postId, $onlyValidated);
 
-        if (isset($_GET['action'])) {
-            $action = $_GET['action'];
-
-            if ($action === 'delete_post') {
-                if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
-                    $this->postService->deletePost($postId);
-                    header("Location: /index.php?page=blog_list");
-                    exit;
-                }
-            }
-
-            if (isset($_GET['comment_id'])) {
-                $commentId = (int) $_GET['comment_id'];
-
-                if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
-                    if ($action === 'validate_comment') {
-                        $this->commentService->validateComment($commentId);
-                    } elseif ($action === 'delete_comment') {
-                        $this->commentService->deleteComment($commentId);
-                    }
-                }
-            }
-
-            header("Location: /index.php?page=post&id={$postId}");
-            exit;
+        if ($this->handleAction($postId)) {
+            return $this->redirect("/index.php?page=post&id={$postId}");
         }
 
-        $params = $this->getGlobalParams(['post' => $post, 'postAuthor' => $postAuthor, 'comments' => $comments, 'isAdmin' => in_array('admin', $userRole) || in_array('super_admin', $userRole)]);
-        echo $this->twig->render('post.html.twig', $params);
+        $params = $this->getGlobalParams([
+            'post' => $post,
+            'postAuthor' => $postAuthor,
+            'comments' => $comments,
+            'isAdmin' => in_array('admin', $userRole) || in_array('super_admin', $userRole)
+        ]);
+
+        return $this->twig->render('post.html.twig', $params);
     }
 
-    public function list(): void
+    private function handleAction(int $postId): bool
+    {
+        if (!isset($_GET['action'])) {
+            return false;
+        }
+
+        $action = $_GET['action'];
+
+        if ($action === 'delete_post' && $this->authenticationService->authorize(['admin', 'super_admin'])) {
+            $this->postService->deletePost($postId);
+            return true;
+        }
+
+        if (isset($_GET['comment_id'])) {
+            $commentId = (int) $_GET['comment_id'];
+
+            if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
+                if ($action === 'validate_comment') {
+                    $this->commentService->validateComment($commentId);
+                } elseif ($action === 'delete_comment') {
+                    $this->commentService->deleteComment($commentId);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function list(): string
     {
         $isAdmin = $this->authenticationService->authorize(['admin', 'super_admin']);
         $posts = $this->postService->findAllPosts();
@@ -192,6 +230,11 @@ class PostController
         }
 
         $params = $this->getGlobalParams(['posts' => $postsWithCommentsInfo, 'isAdmin' => $isAdmin]);
-        echo $this->twig->render('blog_list.html.twig', $params);
+        return $this->twig->render('blog_list.html.twig', $params);
+    }
+
+    private function redirect(string $url): string
+    {
+        return json_encode(['redirect' => $url]);
     }
 }
