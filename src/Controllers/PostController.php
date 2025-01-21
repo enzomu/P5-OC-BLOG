@@ -46,8 +46,7 @@ class PostController
     public function create(): string
     {
         if (!$this->authenticationService->authorize(['super_admin', 'admin'])) {
-            header('Location: /index.php?page=home');
-            exit;
+            return $this->redirect('Location: /index.php?page=home');
         }
 
         if ($this->requestManager->isPost()) {
@@ -60,8 +59,7 @@ class PostController
             ];
 
             if (!$this->postService->validatePostData($data)) {
-                header('Location: /index.php?page=create_post');
-                exit;
+                return $this->redirect('Location: /index.php?page=create_post');
             }
 
             $data['userId'] = $this->requestManager->getSession('user_id');
