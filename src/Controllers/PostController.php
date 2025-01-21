@@ -5,6 +5,7 @@ namespace Enzo\P5OcBlog\Controllers;
 use Enzo\P5OcBlog\Services\AuthenticationService;
 use Enzo\P5OcBlog\Services\CommentService;
 use Enzo\P5OcBlog\Services\PostService;
+use Enzo\P5OcBlog\Services\RequestManager;
 use Enzo\P5OcBlog\Services\UserService;
 use Twig\Environment;
 
@@ -14,9 +15,9 @@ class PostController
     private Environment $twig;
     private UserController $userController;
     private CommentService $commentService;
-
     private AuthenticationService $authenticationService;
     private UserService $userService;
+    private RequestManager $requestManager;
 
     public function __construct(
         PostService $postService,
@@ -24,15 +25,16 @@ class PostController
         Environment $twig,
         UserController $userController,
         UserService $userService,
-        AuthenticationService $authenticationService
-    )
-    {
+        AuthenticationService $authenticationService,
+        requestManager $requestManager
+    ) {
         $this->postService = $postService;
         $this->commentService = $commentService;
         $this->userController = $userController;
         $this->userService = $userService;
         $this->twig = $twig;
         $this->authenticationService = $authenticationService;
+        $this->requestManager = $requestManager;
     }
 
     private function getGlobalParams(array $additionalParams = []): array
@@ -47,14 +49,14 @@ class PostController
             header('Location: /index.php?page=home');
             exit;
         }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+        if ($this->requestManager->isPost()) {
             $data = [
-                'title' => $_POST['title'] ?? '',
-                'content' => $_POST['content'] ?? '',
-                'image' => $_POST['image'] ?? '',
-                'caption' => $_POST['caption'] ?? '',
-                'chapo' => $_POST['chapo'] ?? '',
+                'title' => $this->requestManager->getPost('title', ''),
+                'content' => $this->requestManager->getPost('content', ''),
+                'image' => $this->requestManager->getPost('image', ''),
+                'caption' => $this->requestManager->getPost('caption', ''),
+                'chapo' => $this->requestManager->getPost('chapo', ''),
             ];
 
             if (!$this->postService->validatePostData($data)) {
@@ -62,8 +64,7 @@ class PostController
                 exit;
             }
 
-
-            $data['userId'] = $_SESSION['user_id'];
+            $data['userId'] = $this->requestManager->getSession('user_id');
 
             $result = $this->postService->createPost(
                 $data['title'],
@@ -73,7 +74,6 @@ class PostController
                 $data['chapo'],
                 $data['userId']
             );
-
 
             if ($result['success']) {
                 return $this->redirect('/index.php?page=blog_list');
@@ -93,14 +93,14 @@ class PostController
             return $this->redirect('/index.php?page=home');
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($this->requestManager->isPost()) {
             $data = [
-                'id' => $_POST['id'] ?? null,
-                'title' => $_POST['title'] ?? '',
-                'content' => $_POST['content'] ?? '',
-                'image' => $_POST['image'] ?? '',
-                'caption' => $_POST['caption'] ?? '',
-                'chapo' => $_POST['chapo'] ?? '',
+                'id' => $this->requestManager->getPost('id'),
+                'title' => $this->requestManager->getPost('title', ''),
+                'content' => $this->requestManager->getPost('content', ''),
+                'image' => $this->requestManager->getPost('image', ''),
+                'caption' => $this->requestManager->getPost('caption', ''),
+                'chapo' => $this->requestManager->getPost('chapo', ''),
             ];
 
             if (!$this->postService->validatePostData($data)) {
@@ -127,7 +127,6 @@ class PostController
         return $this->twig->render('404.html.twig');
     }
 
-
     public function showEditForm(int $postId): string
     {
         $post = $this->postService->findPostById($postId);
@@ -146,8 +145,7 @@ class PostController
             return $this->redirect('/index.php?page=home');
         }
         $this->postService->deletePost($postId);
-        header('Location: /index.php?page=blog_list');
-        exit;
+        return $this->redirect('/index.php?page=blog_list');
     }
 
     public function show(int $postId): string
@@ -181,26 +179,26 @@ class PostController
 
     private function handleAction(int $postId): bool
     {
-        if (!isset($_GET['action'])) {
+        $action = $this->requestManager->getGet('action');
+
+        if (!$action) {
             return false;
         }
-
-        $action = $_GET['action'];
 
         if ($action === 'delete_post' && $this->authenticationService->authorize(['admin', 'super_admin'])) {
             $this->postService->deletePost($postId);
             return true;
         }
 
-        if (isset($_GET['comment_id'])) {
-            $commentId = (int) $_GET['comment_id'];
+        $commentId = $this->requestManager->getGet('comment_id');
 
-            if ($this->authenticationService->authorize(['admin', 'super_admin'])) {
-                if ($action === 'validate_comment') {
-                    $this->commentService->validateComment($commentId);
-                } elseif ($action === 'delete_comment') {
-                    $this->commentService->deleteComment($commentId);
-                }
+        if ($commentId && $this->authenticationService->authorize(['admin', 'super_admin'])) {
+            $commentId = (int) $commentId;
+
+            if ($action === 'validate_comment') {
+                $this->commentService->validateComment($commentId);
+            } elseif ($action === 'delete_comment') {
+                $this->commentService->deleteComment($commentId);
             }
         }
 

@@ -59,7 +59,7 @@ function handleRouting(
             if ($postId) {
                 return $postController->delete($postId);
             }
-            return $twig->render('404.html.twig');
+            return $twig->render('blog_list.html.twig');
 
         case 'create_comment':
             $postId = filter_input(INPUT_GET, 'post_id', FILTER_VALIDATE_INT);
@@ -81,6 +81,9 @@ function handleRouting(
                 return $commentController->delete($commentId);
             }
             return $twig->render('404.html.twig');
+
+        case 'send_email':
+            return $userController->sendEmail();
 
         default:
             return $twig->render('404.html.twig');

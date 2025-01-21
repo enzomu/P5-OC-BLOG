@@ -19,7 +19,7 @@ class AuthenticationService
             return false;
         }
 
-        $userId = $_SESSION['user_id'];
+        $userId = SessionManager::get('user_id');
         $userRoles = $this->userController->getUserRoles($userId);
 
         return count(array_intersect($requiredRoles, $userRoles)) > 0;
@@ -30,7 +30,7 @@ class AuthenticationService
         if (!$this->userController->isUserLoggedIn()) {
             return null;
         }
-        $userId = $_SESSION['user_id'];
+        $userId = SessionManager::get('user_id');
         return $this->userController->getUserRoles($userId);
     }
 }
