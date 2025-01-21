@@ -71,7 +71,7 @@ class CommentRepository
         return $stmt->execute();
     }
 
-    public function findByPostId(int $postId,  bool $onlyValidated = false): array
+    public function findByPostId(int $postId, bool $onlyValidated = false): array
     {
         $sql = 'SELECT * FROM comments WHERE post_id = :post_id';
         if ($onlyValidated) {

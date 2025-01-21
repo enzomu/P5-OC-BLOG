@@ -3,7 +3,6 @@
 namespace Enzo\P5OcBlog\Repository;
 
 use Enzo\P5OcBlog\Entity\User;
-
 use PDO;
 
 class UserRepository

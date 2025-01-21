@@ -13,7 +13,7 @@ class AuthenticationService
         $this->userController = $userController;
     }
 
-    public function authorize (array $requiredRoles): bool
+    public function authorize(array $requiredRoles): bool
     {
         if (!$this->userController->isUserLoggedIn()) {
             return false;
@@ -25,7 +25,7 @@ class AuthenticationService
         return count(array_intersect($requiredRoles, $userRoles)) > 0;
     }
 
-    public function getRoles (): ?array
+    public function getRoles(): ?array
     {
         if (!$this->userController->isUserLoggedIn()) {
             return null;

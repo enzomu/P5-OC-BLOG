@@ -4,6 +4,7 @@ use Enzo\P5OcBlog\Controllers\UserController;
 use Enzo\P5OcBlog\Controllers\PostController;
 use Enzo\P5OcBlog\Controllers\CommentController;
 use Twig\Environment;
+
 function handleRouting(
     string $page,
     array $params,

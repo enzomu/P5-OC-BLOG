@@ -1,7 +1,9 @@
 <?php
 
 namespace Enzo\P5OcBlog\Entity;
-class User {
+
+class User
+{
     private int $id;
     private string $username;
     private string $email;
@@ -9,7 +11,8 @@ class User {
     private string $role;
     private $createdAt;
 
-    public function __construct($id, $username, $email, $password, $role, $createdAt) {
+    public function __construct($id, $username, $email, $password, $role, $createdAt)
+    {
         $this->id = $id;
         $this->username = $username;
         $this->email = $email;
@@ -18,40 +21,48 @@ class User {
         $this->createdAt = $createdAt;
     }
 
-    public function getId() {
+    public function getId()
+    {
         return $this->id;
     }
 
-    public function getUsername() {
+    public function getUsername()
+    {
         return $this->username;
     }
 
-    public function setUsername($username) {
+    public function setUsername($username)
+    {
         $this->username = $username;
     }
 
-    public function getEmail() {
+    public function getEmail()
+    {
         return $this->email;
     }
 
-    public function getPassword() {
+    public function getPassword()
+    {
         return $this->password;
     }
 
-    public function setPassword($password) {
+    public function setPassword($password)
+    {
         $this->password = $password;
     }
 
-    public function getRole() {
+    public function getRole()
+    {
         return $this->role;
     }
 
-    public function setRole($role) {
+    public function setRole($role)
+    {
         $this->role = $role;
     }
 
-    public function getCreatedAt() {
+    public function getCreatedAt()
+    {
         return $this->createdAt;
     }
 }
-
