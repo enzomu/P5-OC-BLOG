@@ -52,7 +52,7 @@
 
                     {% if isAdmin %}
                         <div class="d-flex">
-                            <form method="post" action="/index.php?page=post&id={{ post.id }}&action=delete_post" class="me-2">
+                                <form method="post" action="/index.php?page=delete_post&id={{ post.id }}" class="me-2">
                                 <button type="submit" class="btn btn-danger btn-sm w-auto">Delete</button>
                             </form>
                             <form method="post" action="/index.php?page=edit_post&id={{ post.id }}">

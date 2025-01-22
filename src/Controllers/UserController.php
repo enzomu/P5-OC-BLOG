@@ -3,20 +3,26 @@
 namespace Enzo\P5OcBlog\Controllers;
 
 use Enzo\P5OcBlog\Repository\UserRepository;
+use Enzo\P5OcBlog\Services\RequestManager;
+use Enzo\P5OcBlog\Services\SessionManager;
 use Enzo\P5OcBlog\Services\UserService;
+use PHPMailer\PHPMailer\Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 use Twig\Environment;
 
 class UserController
 {
     private UserService $userService;
     private Environment $twig;
-    private $userRepository;
+    private UserRepository $userRepository;
+    private RequestManager $requestManager;
 
-    public function __construct(UserService $userService, Environment $twig, UserRepository $userRepository)
+    public function __construct(UserService $userService, Environment $twig, UserRepository $userRepository, RequestManager $requestManager)
     {
         $this->userService = $userService;
         $this->twig = $twig;
         $this->userRepository = $userRepository;
+        $this->requestManager = $requestManager;
     }
 
     public function register(): string
@@ -25,13 +31,13 @@ class UserController
         $username = '';
         $email = '';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = $_POST['username'];
-            $email = $_POST['email'];
-            $password = $_POST['password'];
-            $confirm_password = $_POST['confirm_password'];
+        if ($this->requestManager->isPost()) {
+            $username = $this->requestManager->getPost('username');
+            $email = $this->requestManager->getPost('email');
+            $password = $this->requestManager->getPost('password');
+            $confirmPassword = $this->requestManager->getPost('confirm_password');
 
-            if ($password !== $confirm_password) {
+            if ($password !== $confirmPassword) {
                 $error = "Les mots de passe ne correspondent pas.";
             } else {
                 $result = $this->userService->register($username, $email, $password);
@@ -46,56 +52,97 @@ class UserController
 
         return $this->twig->render('register.html.twig', [
             'error' => $error,
-            'username' => addslashes($username,),
+            'username' => addslashes($username),
             'email' => $email
         ]);
     }
 
     public function login(): string
     {
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $email = $_POST['email'];
-            $password = $_POST['password'];
+        if ($this->requestManager->isPost()) {
+            $email = $this->requestManager->getPost('email');
+            $password = $this->requestManager->getPost('password');
 
             $user = $this->userService->login($email, $password);
 
             if ($user) {
-                $_SESSION['user_id'] = $user->getId();
+                SessionManager::set('user_id', $user->getId());
                 return $this->redirect("/index.php?page=home");
             } else {
                 $error = "Identifiants invalides";
             }
+
             return $this->twig->render('login.html.twig', [
                 'error' => $error
             ]);
         }
+
         return $this->twig->render('404.html.twig');
     }
 
     public function logout(): string
     {
-        session_unset();
-        session_destroy();
+        SessionManager::clear();
         return $this->redirect("/index.php?page=home");
     }
 
     public function isUserLoggedIn(): bool
     {
-        return !empty($_SESSION['user_id']);
+        return !empty(SessionManager::get('user_id'));
     }
 
     public function getUserInfo(): array
     {
-        if (isset($_SESSION['user_id'])) {
-            $user = $this->userService->getUserById($_SESSION['user_id']);
+        $userId = SessionManager::get('user_id');
+
+        if ($userId) {
+            $user = $this->userService->getUserById($userId);
             return [
                 'isLoggedIn' => true,
                 'username' => $user->getUsername(),
                 'role' => $user->getRole()
             ];
         }
-        return ['isLoggedIn' => false, 'username' => null, 'role' => null,];
+
+        return [
+            'isLoggedIn' => false,
+            'username' => null,
+            'role' => null
+        ];
+    }
+
+    public function sendEmail(): string
+    {
+        if ($this->requestManager->isPost()) {
+
+            $name = $this->requestManager->getPost('name');
+            $email = $this->requestManager->getPost('email');
+            $message = $this->requestManager->getPost('message');
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($name) || empty($message)) {
+                return $this->redirect("/index.php?page=home");
+            }
+            $mail = new PHPMailer(true);
+
+            $mail->isSMTP();
+            $mail->Host = 'smtp.example.com'; //serveur SMTP
+            $mail->SMTPAuth = true;
+            $mail->Username = '123456@example.com'; // mon email
+            $mail->Password = 'your_password'; // mon mdp
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+
+            $mail->setFrom($email, $name);
+            $mail->addAddress('recipient@example.com');
+            $mail->Subject = 'New Contact Form Submission';
+            $mail->Body = "Name: $name\nEmail: $email\nMessage:\n$message";
+
+            $mail->send();
+
+            return $this->redirect("/index.php?page=home");
+        }
+
+        return $this->redirect("/index.php?page=home");
     }
 
     public function getUserRoles(int $userId): array

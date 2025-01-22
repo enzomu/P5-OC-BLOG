@@ -58,12 +58,9 @@ class PostService
     }
 
 
-    public function deletePost($id): array
+    public function deletePost($id): void
     {
-        if ($this->postRepository->delete($id)) {
-            return ['success' => true, 'message' => 'Post supprimé avec succès'];
-        }
-        return ['success' => false, 'message' => "Erreur lors de la suppression du post"];
+        $this->postRepository->delete($id);
     }
 
     public function validatePostData(array $data): bool
