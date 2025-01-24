@@ -30,7 +30,7 @@ class CommentService
         $comment = $this->commentRepository->findById($id);
 
         if ($comment) {
-            $updatedComment = new Comment($id, $content, new \DateTime(), $comment->getUserId(), $comment->getPostId());
+            $updatedComment = new Comment($id, $content, new \DateTime(), $comment->getUserId(), $comment->getPostId(), $comment->getValidated());
             if ($this->commentRepository->save($updatedComment)) {
                 return ['success' => true, 'message' => 'Commentaire mis à jour avec succès'];
             } else {

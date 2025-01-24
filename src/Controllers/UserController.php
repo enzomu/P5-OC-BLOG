@@ -114,37 +114,37 @@ class UserController
     public function sendEmail(): string
     {
         if ($this->requestManager->isPost()) {
-
             $name = $this->requestManager->getPost('name');
             $email = $this->requestManager->getPost('email');
             $message = $this->requestManager->getPost('message');
 
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($name) || empty($message)) {
+          if (!filter_var($email, FILTER_VALIDATE_EMAIL) || empty($name) || empty($message)) {
                 return $this->redirect("/index.php?page=home");
             }
+
             $mail = new PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Debugoutput = function ($str, $level) {
+                    error_log("SMTP Debug level $level: $str");
+                };
+                $mail->Host = 'smtp.sendgrid.net';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'apikey';
+                $mail->Password = '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';
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 587;
 
-            $mail->isSMTP();
-            $mail->Host = 'smtp.example.com'; //serveur SMTP
-            $mail->SMTPAuth = true;
-            $mail->Username = '123456@example.com'; // mon email
-            $mail->Password = 'your_password'; // mon mdp
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
+                $mail->setFrom('spirit_49@hotmail.fr', 'SendGrid');
+                $mail->addAddress('spirit_49@hotmail.fr');
+                $mail->addReplyTo($email, $name);
+                $mail->Subject = 'New mail from form';
+                $mail->Body = $message;
 
-            $mail->setFrom($email, $name);
-            $mail->addAddress('recipient@example.com');
-            $mail->Subject = 'New Contact Form Submission';
-            $mail->Body = "Name: $name\nEmail: $email\nMessage:\n$message";
-
-            $mail->send();
-
-            return $this->redirect("/index.php?page=home");
+                $mail->send();
         }
 
         return $this->redirect("/index.php?page=home");
     }
-
     public function getUserRoles(int $userId): array
     {
         return $this->userRepository->getUserRoles($userId);
