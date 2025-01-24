@@ -113,6 +113,9 @@ class UserController
 
     public function sendEmail(): string
     {
+
+        $this->API_KEY = $_ENV['API_KEY'];
+
         if ($this->requestManager->isPost()) {
             $name = $this->requestManager->getPost('name');
             $email = $this->requestManager->getPost('email');
@@ -130,7 +133,7 @@ class UserController
                 $mail->Host = 'smtp.sendgrid.net';
                 $mail->SMTPAuth = true;
                 $mail->Username = 'apikey';
-                $mail->Password = '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';
+                $mail->Password = 'API_KEY';
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
 
